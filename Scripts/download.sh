@@ -5,7 +5,7 @@ sra=$1
 genome=$2
 
 # Téléchargement des reads
-mkdir ../$sra
+mkdir --parents ../$sra
 fastq-dump -v --gzip --outdir ../$sra $sra
 
 # Téléchargement du génome de référence

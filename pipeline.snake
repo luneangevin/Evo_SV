@@ -7,7 +7,7 @@ Configuration of the analysis
 """
 configfile: "config.yaml"
 
-wdir=config['workingdir']
+wdir= config['workingdir'] + config['sra']
 sra=config['sra']
 genome=config['genome']
 tools=["svim", "sniffles", "cutesv"]
@@ -19,29 +19,35 @@ wildcard_constraints:
 
 rule all:
 	input:
-		target = expand("{wdir}{sra}/{sra}_cutesv.vcf", wdir=wdir, sra=sra)
+		target = expand("{wdir}/{sra}_cutesv.vcf", wdir=wdir, sra=sra)
 
 rule download:
 	"""
 	Download the reads from the NCBI database
 	"""
 	output:
-		"{wdir}{sra}/{sra}.fastq.gz",
-		"{wdir}{sra}/ref_{sra}.fna"
+		"{wdir}/{sra}.fastq.gz",
+		"{wdir}/ref_{sra}.fna"
 	conda:
 		"Envs/download.yaml"
 	shell:
-		"Scripts/download.sh {sra} {genome}"
+		"""
+		mkdir --parents {wdir}
+		fastq-dump -v --gzip --outdir {wdir} {sra}
+		datasets download genome accession {genome} --filename {wdir}/ref_{sra}.zip
+		unzip {wdir}/ref_{sra}.zip
+		mv {wdir}/ncbi_dataset/data/$genome/*.fna {wdir}/ref_{sra}.fna
+		"""
 
 rule mapping:
 	"""
 	Map reads to the reference genome
 	"""
 	input:
-		"{wdir}{sra}/{sra}.fastq.gz"
-		"{wdir}{sra}/ref_{sra}.fna"
+		"{wdir}/{sra}.fastq.gz",
+		"{wdir}/ref_{sra}.fna"
 	output:
-		"{wdir}{sra}/{sra}.sam"
+		"{wdir}/{sra}.sam"
 	conda:
 		"Envs/minimap2.yaml"
 	shell:
@@ -52,9 +58,9 @@ rule samtools_view:
 	Transform the sam file to a bam file
 	"""
 	input:
-		"{wdir}{sra}/{sra}.sam"
+		"{wdir}/{sra}.sam"
 	output:
-		"{wdir}{sra}/{sra}.bam"
+		"{wdir}/{sra}.bam"
 	conda:
 		"Envs/samtools.yaml"
 	shell:
@@ -65,9 +71,9 @@ rule samtools_sort:
 	Sort the bam file
 	"""
 	input:
-		"{wdir}{sra}/{sra}.bam"
+		"{wdir}/{sra}.bam"
 	output:
-		"{wdir}{sra}/{sra}_sorted.bam"
+		"{wdir}/{sra}_sorted.bam"
 	conda:
 		"Envs/samtools.yaml"
 	shell:
@@ -78,9 +84,9 @@ rule samtools_index:
 	Create an index related file of the sorted bam file
 	"""
 	input:
-		"{wdir}{sra}/{sra}_sorted.bam"
+		"{wdir}/{sra}_sorted.bam"
 	output:
-		"{wdir}{sra}/{sra}_sorted.bam.bai"
+		"{wdir}/{sra}_sorted.bam.bai"
 	conda:
 		"Envs/samtools.yaml"
 	shell:
@@ -91,9 +97,9 @@ rule svim:
 	Call SVs with the SVIM tool
 	"""
 	input:
-		"{wdir}{sra}/{sra}_sorted.bam.bai"
+		"{wdir}/{sra}_sorted.bam.bai"
 	output:
-		"{wdir}{sra}/{sra}_svim.vcf"
+		"{wdir}/{sra}_svim.vcf"
 	conda:
 		"Envs/svim.yaml"
 	shell:
@@ -104,9 +110,9 @@ rule sniffles:
 	Call SVs with the Sniffles tool
 	"""
 	input:
-		"{wdir}{sra}/{sra}_svim.vcf"
+		"{wdir}/{sra}_svim.vcf"
 	output:
-		"{wdir}{sra}/{sra}_sniffles.vcf"
+		"{wdir}/{sra}_sniffles.vcf"
 	conda:
 		"Envs/sniffles.yaml"
 	shell:
@@ -117,23 +123,11 @@ rule cutesv:
 	Call SVs with the Cutesv tool
 	"""
 	input:
-		"{wdir}{sra}/{sra}_sniffles.vcf"
+		"{wdir}/{sra}_sniffles.vcf"
 	output:
-		"{wdir}{sra}/{sra}_cutesv.vcf"
+		"{wdir}/{sra}_cutesv.vcf"
 	conda:
 		"Envs/cutesv.yaml"
 	shell:
 		"Scripts/cutesv.sh {sra} {min_sv_size} {min_coverage}"
-
-rule paths_sv:
-	"""
-	"""
-	input:
-		"{wdir}{sra}/{sra}_cutesv.vcf"
-	output:
-		"{wdir}{sra}/{sra}_paths_sv"
-	shell:
-		"""
-		echo PATHS
-		"""
 
