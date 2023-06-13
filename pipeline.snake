@@ -1,0 +1,139 @@
+"""
+Pipeline for detection and analysis of structural variants in reference genomes
+"""
+
+"""
+Configuration of the analysis
+"""
+configfile: "config.yaml"
+
+wdir=config['workingdir']
+sra=config['sra']
+genome=config['genome']
+tools=["svim", "sniffles", "cutesv"]
+
+wildcard_constraints:
+    wdir=wdir,
+    sra=sra
+
+
+rule all:
+	input:
+		target = expand("{wdir}{sra}/{sra}_cutesv.vcf", wdir=wdir, sra=sra)
+
+rule download:
+	"""
+	Download the reads from the NCBI database
+	"""
+	output:
+		"{wdir}{sra}/{sra}.fastq.gz",
+		"{wdir}{sra}/ref_{sra}.fna"
+	conda:
+		"Envs/download.yaml"
+	shell:
+		"Scripts/download.sh {sra} {genome}"
+
+rule mapping:
+	"""
+	Map reads to the reference genome
+	"""
+	input:
+		"{wdir}{sra}/{sra}.fastq.gz"
+		"{wdir}{sra}/ref_{sra}.fna"
+	output:
+		"{wdir}{sra}/{sra}.sam"
+	conda:
+		"Envs/minimap2.yaml"
+	shell:
+		"Scripts/minimap2.sh {sra}"
+
+rule samtools_view:
+	"""
+	Transform the sam file to a bam file
+	"""
+	input:
+		"{wdir}{sra}/{sra}.sam"
+	output:
+		"{wdir}{sra}/{sra}.bam"
+	conda:
+		"Envs/samtools.yaml"
+	shell:
+		"Scripts/samtools_view.sh {sra}"
+
+rule samtools_sort:
+	"""
+	Sort the bam file
+	"""
+	input:
+		"{wdir}{sra}/{sra}.bam"
+	output:
+		"{wdir}{sra}/{sra}_sorted.bam"
+	conda:
+		"Envs/samtools.yaml"
+	shell:
+		"Scripts/samtools_sort.sh {sra}"
+
+rule samtools_index:
+	"""
+	Create an index related file of the sorted bam file
+	"""
+	input:
+		"{wdir}{sra}/{sra}_sorted.bam"
+	output:
+		"{wdir}{sra}/{sra}_sorted.bam.bai"
+	conda:
+		"Envs/samtools.yaml"
+	shell:
+		"Scripts/samtools_index.sh {sra}"
+
+rule svim:
+	"""
+	Call SVs with the SVIM tool
+	"""
+	input:
+		"{wdir}{sra}/{sra}_sorted.bam.bai"
+	output:
+		"{wdir}{sra}/{sra}_svim.vcf"
+	conda:
+		"Envs/svim.yaml"
+	shell:
+		"Scripts/svim.sh {sra} {min_sv_size} {min_coverage}"
+
+rule sniffles:
+	"""
+	Call SVs with the Sniffles tool
+	"""
+	input:
+		"{wdir}{sra}/{sra}_svim.vcf"
+	output:
+		"{wdir}{sra}/{sra}_sniffles.vcf"
+	conda:
+		"Envs/sniffles.yaml"
+	shell:
+		"Scripts/sniffles.sh {sra} {min_sv_size} {min_coverage}"
+
+rule cutesv:
+	"""
+	Call SVs with the Cutesv tool
+	"""
+	input:
+		"{wdir}{sra}/{sra}_sniffles.vcf"
+	output:
+		"{wdir}{sra}/{sra}_cutesv.vcf"
+	conda:
+		"Envs/cutesv.yaml"
+	shell:
+		"Scripts/cutesv.sh {sra} {min_sv_size} {min_coverage}"
+
+rule paths_sv:
+	"""
+	"""
+	input:
+		"{wdir}{sra}/{sra}_cutesv.vcf"
+	output:
+		"{wdir}{sra}/{sra}_paths_sv"
+	shell:
+		"""
+		echo PATHS
+		"""
+
