@@ -3,38 +3,41 @@ rule vcf_list:
         Create the txt file containing the list of the VCF files to merge
         """
         input:
-
+		"{wdir}/{sra}_cutesv.vcf"
         output:
                 "{wdir}/{sra}_vcf_list.txt"
         shell:
-
+		"""
+		echo '{wdir}/{sra}_svim.vcf' > {wdir}/{sra}_vcf_list.txt
+		echo '{wdir}/{sra}_sniffles.vcf' >> {wdir}/{sra}_vcf_list.txt
+		echo '{wdir}/{sra}_cutesv.vcf' >> {wdir}/{sra}_vcf_list.txt
+		"""
 
 rule jasmine:
         """
         Merge the VCF files obtained by the three SV callers
         """
         input:
-                "{wdir}/{sra}/{sra}_vcf_list.txt"
+                "{wdir}/{sra}_vcf_list.txt"
         output:
-                "{wdir}/{sra}/{sra}_merged.vcf"
+                "{wdir}/{sra}_merged.vcf"
         conda:
-                "{wdir}/Envs/jasminesv.yaml"
+                "Envs/jasminesv.yaml"
         shell:
-                "{wdir}/Scripts/jasmine.sh {sra}"
+                "Scripts/jasmine.sh {sra}"
 
 rule svjedi_graph:
         """
         Genotype the SVs
         """
         input:
-                "{wdir}/{sra}/{sra}.merged.vcf"
-                "{wdir}/{sra}/ref_{sra}.fna"
+                "{wdir}/{sra}_merged.vcf"
         output:
-                "{wdir}
+                "{wdir}/{sra}_genotyped.vcf"
         conda:
-                "{wdir}/Envs/svjedi.yaml"
+                "Envs/svjedi.yaml"
         shell:
-                "{wdir}/Scripts/svjedi.sh"
+                "Scripts/svjedigraph.sh"
 
 
 rule nanoplot:
@@ -42,38 +45,38 @@ rule nanoplot:
 	Quality control of raw data
 	"""
 	input:
-		"{wdir}/{sra}/{sra}.fastq.gz"
+		"{wdir}/{sra}_fastq.gz"
 	output:
-		"{wdir}/{sra}/{sra}_nanoplotstats.txt
+		"{wdir}/{sra}_nanoplotstats.txt
 	conda:
-		"{wdir}/Envs/nanoplot.yaml"
+		"Envs/nanoplot.yaml"
 	shell:
-		"{wdir}/Scripts/nanoplot.sh {sra}"
+		"Scripts/nanoplot.sh {sra}"
 
 rule samtools_stats:
 	"""
 	Quality control of the mapping
 	"""
 	input:
-		"{wdir}/{sra}/{sra}_sorted.abm"
+		"{wdir}/{sra}_sorted.bam"
 	output:
-		"{wdir}/{sra}/{sra}_mapping.stats"
+		"{wdir}/{sra}_mapping.stats"
 	conda:
-		"{wdir}/Envs/samtools.yaml"
+		"Envs/samtools.yaml"
 	shell:
-		"{wdir}/Scripts/samtools_stats.sh {sra}"
+		"Scripts/samtools_stats.sh {sra}"
 
 rule bamstats:
 	"""
 	Vizualisation of quality control of the mapping
 	"""
 	input:
-		"{wdir}/{sra}/{sra}_mapping.stats"
+		"{wdir}/{sra}_mapping.stats"
 	output:
-		"{wdir}/{sra}/{sra}_mapping_visu"
+		"{wdir}/{sra}_mapping_visu"
 	conda:
-		"{wdir}/Envs/gnuplot.yaml"
+		"Envs/gnuplot.yaml"
 	shell:
-		"{wdir}/Scripts/bamstats.sh {sra}"
+		"Scripts/bamstats.sh {sra}"
 
 

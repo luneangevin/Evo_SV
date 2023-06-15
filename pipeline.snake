@@ -19,7 +19,7 @@ wildcard_constraints:
 
 rule all:
 	input:
-		target = expand("{wdir}/{sra}_cutesv.vcf", wdir=wdir, sra=sra)
+		target = expand("{wdir}/{sra}_merged.vcf", wdir=wdir, sra=sra)
 
 rule download:
 	"""
@@ -31,13 +31,7 @@ rule download:
 	conda:
 		"Envs/download.yaml"
 	shell:
-		"""
-		mkdir --parents {wdir}
-		fastq-dump -v --gzip --outdir {wdir} {sra}
-		datasets download genome accession {genome} --filename {wdir}/ref_{sra}.zip
-		unzip {wdir}/ref_{sra}.zip
-		mv {wdir}/ncbi_dataset/data/$genome/*.fna {wdir}/ref_{sra}.fna
-		"""
+		"Scripts/download.sh {sra} {genome}"
 
 rule mapping:
 	"""
@@ -130,4 +124,45 @@ rule cutesv:
 		"Envs/cutesv.yaml"
 	shell:
 		"Scripts/cutesv.sh {sra} {min_sv_size} {min_coverage}"
+
+rule vcf_list:
+        """
+        Create the txt file containing the list of the VCF files to merge
+        """
+        input:
+                "{wdir}/{sra}_cutesv.vcf"
+        output:
+                "{wdir}/{sra}_vcf_list.txt"
+        shell:
+                """
+                echo '{wdir}/{sra}_svim.vcf' > {wdir}/{sra}_vcf_list.txt
+                echo '{wdir}/{sra}_sniffles.vcf' >> {wdir}/{sra}_vcf_list.txt
+                echo '{wdir}/{sra}_cutesv.vcf' >> {wdir}/{sra}_vcf_list.txt
+                """
+
+rule bam_list:
+	"""
+	Create the txt file containing the list of the bam files for IRIS
+	"""
+	input :
+		"{wdir}/{sra}_vcf_list.txt"
+	output:
+		"{wdir}/{sra}_bam_list.txt"
+	shell:
+		"""
+		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt"
+		"""
+
+rule jasmine:
+        """
+        Merge the VCF files obtained by the three SV callers
+        """
+        input:
+                "{wdir}/{sra}_bam_list.txt"
+        output:
+                "{wdir}/{sra}_merged.vcf"
+        conda:
+                "Envs/jasminesv.yaml"
+        shell:
+                "Scripts/jasmine.sh {sra}"
 
