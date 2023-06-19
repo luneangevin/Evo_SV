@@ -21,17 +21,17 @@ rule all:
 	input:
 		target = expand("{wdir}/{sra}_merged.vcf", wdir=wdir, sra=sra)
 
-rule download:
-	"""
-	Download the reads from the NCBI database
-	"""
-	output:
-		"{wdir}/{sra}.fastq.gz",
-		"{wdir}/ref_{sra}.fna"
-	conda:
-		"Envs/download.yaml"
-	shell:
-		"Scripts/download.sh {sra} {genome}"
+#rule download:
+#	"""
+#	Download the reads from the NCBI database
+#	"""
+#	output:
+#		"{wdir}/{sra}.fastq.gz",
+#		"{wdir}/ref_{sra}.fna"
+#	conda:
+#		"Envs/download.yaml"
+#	shell:
+#		"Scripts/download.sh {sra} {genome}"
 
 rule mapping:
 	"""
@@ -97,7 +97,7 @@ rule svim:
 	conda:
 		"Envs/svim.yaml"
 	shell:
-		"Scripts/svim.sh {sra} {min_sv_size} {min_coverage}"
+		"Scripts/svim.sh {sra} {config['min_sv_size']} {config['min_coverage']}"
 
 rule sniffles:
 	"""
@@ -110,7 +110,7 @@ rule sniffles:
 	conda:
 		"Envs/sniffles.yaml"
 	shell:
-		"Scripts/sniffles.sh {sra} {min_sv_size} {min_coverage}"
+		"Scripts/sniffles.sh {sra} {config['min_sv_size']} {config['min_coverage']}"
 
 rule cutesv:
 	"""
@@ -123,7 +123,7 @@ rule cutesv:
 	conda:
 		"Envs/cutesv.yaml"
 	shell:
-		"Scripts/cutesv.sh {sra} {min_sv_size} {min_coverage}"
+		"Scripts/cutesv.sh {sra} {config['min_sv_size']} {config['min_coverage']}"
 
 rule vcf_list:
         """

@@ -4,4 +4,4 @@
 sra=$1
 
 # Conversion
-samtools view -S -b ../$sra/$sra.sam > ../$sra/$sra.bam
+samtools view -S -b $sra/$sra.sam > $sra/$sra.bam

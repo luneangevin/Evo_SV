@@ -4,4 +4,4 @@
 sra=$1
 
 # Tri
-samtools sort ../$sra/$sra.bam -o ../$sra/${sra}_sorted.bam
+samtools sort $sra/$sra.bam -o $sra/${sra}_sorted.bam

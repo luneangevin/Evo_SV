@@ -4,4 +4,4 @@
 sra=$1
 
 # Indexage
-samtools index ../$sra/${sra}_sorted.bam
+samtools index $sra/${sra}_sorted.bam

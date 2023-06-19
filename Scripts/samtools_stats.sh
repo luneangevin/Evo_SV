@@ -4,4 +4,4 @@
 sra=$1
 
 # Contrôle qualité du mapping
-samtools stats ../$sra/${sra}_sorted.bam > ../$sra/${sra}_mapping.stats
+samtools stats $sra/${sra}_sorted.bam > $sra/${sra}_mapping.stats
