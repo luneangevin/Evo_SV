@@ -39,7 +39,7 @@ rule mapping:
 	"""
 	input:
 		"{wdir}/{sra}.fastq.gz",
-		"{wdir}/ref_{sra}.fna"
+		"{wdir}/ref_{sra}.fna.gz"
 	output:
 		"{wdir}/{sra}.sam"
 	conda:
@@ -97,7 +97,7 @@ rule svim:
 	conda:
 		"Envs/svim.yaml"
 	shell:
-		"Scripts/svim.sh {sra} {config['min_sv_size']} {config['min_coverage']}"
+		"Scripts/svim.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
 
 rule sniffles:
 	"""
@@ -110,7 +110,7 @@ rule sniffles:
 	conda:
 		"Envs/sniffles.yaml"
 	shell:
-		"Scripts/sniffles.sh {sra} {config['min_sv_size']} {config['min_coverage']}"
+		"Scripts/sniffles.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
 
 rule cutesv:
 	"""
@@ -119,11 +119,12 @@ rule cutesv:
 	input:
 		"{wdir}/{sra}_sniffles.vcf"
 	output:
-		"{wdir}/{sra}_cutesv.vcf"
+		"{wdir}/{sra}_cutesv.vcf",
+                temporary("{wdir}/ref_{sra}.fna")
 	conda:
 		"Envs/cutesv.yaml"
 	shell:
-		"Scripts/cutesv.sh {sra} {config['min_sv_size']} {config['min_coverage']}"
+		"Scripts/cutesv.sh {sra} {config[min_sv_size]} {config[min_coverage]}"
 
 rule vcf_list:
         """
@@ -150,7 +151,7 @@ rule bam_list:
 		"{wdir}/{sra}_bam_list.txt"
 	shell:
 		"""
-		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt"
+		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
 		"""
 
 rule jasmine:
