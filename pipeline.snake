@@ -152,6 +152,8 @@ rule bam_list:
 	shell:
 		"""
 		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
+		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
+		echo '{wdir}/{sra}_sorted.bam' > {wdir}/{sra}_bam_list.txt
 		"""
 
 rule jasmine:
