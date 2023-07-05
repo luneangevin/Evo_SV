@@ -17,7 +17,7 @@ snakemake -s pipeline.snake --config config.yaml --use-conda --conda-frontend "m
 
 ## Configuration file
 
-The configuration file is used to enter the accession numbers corresponding to the species being studied. It can also be used to adjust certain parameters of the detection tools, such as the minimum size of SVs or the minimum coverage.
+The configuration file *config.yaml* is used to enter the accession numbers corresponding to the species being studied. It can also be used to adjust certain parameters of the detection tools, such as the minimum size of SVs or the minimum coverage.
 
 ## Input data
 
