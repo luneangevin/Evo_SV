@@ -10,7 +10,7 @@ configfile: "config.yaml"
 wdir= config['workingdir'] + config['sra']
 sra=config['sra']
 genome=config['genome']
-tools=["svim", "sniffles", "cutesv"]
+
 
 wildcard_constraints:
     wdir=wdir,
@@ -21,17 +21,17 @@ rule all:
 	input:
 		target = expand("{wdir}/{sra}_merged.vcf", wdir=wdir, sra=sra)
 
-#rule download:
-#	"""
-#	Download the reads from the NCBI database
-#	"""
-#	output:
-#		"{wdir}/{sra}.fastq.gz",
-#		"{wdir}/ref_{sra}.fna"
-#	conda:
-#		"Envs/download.yaml"
-#	shell:
-#		"Scripts/download.sh {sra} {genome}"
+rule download:
+	"""
+	Download the reads from the NCBI database
+	"""
+	output:
+		"{wdir}/{sra}.fastq.gz",
+		"{wdir}/ref_{sra}.fna"
+	conda:
+		"Envs/download.yaml"
+	shell:
+		"Scripts/download.sh {sra} {genome}"
 
 rule mapping:
 	"""
