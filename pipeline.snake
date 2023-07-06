@@ -27,7 +27,7 @@ rule download:
 	"""
 	output:
 		"{wdir}/{sra}.fastq.gz",
-		"{wdir}/ref_{sra}.fna"
+		"{wdir}/ref_{sra}.fna.gz"
 	conda:
 		"Envs/download.yaml"
 	shell:
